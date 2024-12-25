@@ -1,13 +1,9 @@
 import { ApiRoutes } from "../routes";
 import axios from "axios";
 
-export const CreateBlog = async (formData: FormData) => {
+export const CreateBlog = async (title: string, content: string) => {
   try {
-    const response = await axios.post(ApiRoutes.BLOGS, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    const response = await axios.post(ApiRoutes.BLOGS, { title, content });
     return response.data;
   } catch (error: any) {
     console.error("Error creating blog:", error);

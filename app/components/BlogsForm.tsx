@@ -21,21 +21,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 type Inputs = {
   title: string;
   content: string;
-  image: File | null;
 };
 
 export default function Blogsform() {
   const [load, setLoad] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const formSchema = z.object({
     title: z.string().min(2, {
-      message: "Title must be at least 2 characters.",
+      message: "Username must be at least 2 characters.",
     }),
+
     content: z.string().min(2, {
-      message: "Content must be at least 2 characters.",
+      message: "Username must be at least 2 characters.",
     }),
-    image: z.instanceof(File, { message: "Image is required" }).nullable(),
   });
 
   const form = useForm<Inputs>({
@@ -43,33 +41,25 @@ export default function Blogsform() {
     defaultValues: {
       title: "",
       content: "",
-      image: null,
     },
   });
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    console.log("999999999999999999999", data);
     setLoad(true);
     try {
-      const formData = new FormData();
-      formData.append("title", data.title);
-      formData.append("content", data.content);
-      if (data.image) {
-        formData.append("image", data.image);
-      }
-
-      await CreateBlog(formData); // Ensure your CreateBlog function handles FormData
+      await CreateBlog(data?.title, data?.content);
     } catch (error: any) {
-      console.error(error);
+      console.log(error);
     } finally {
       setLoad(false);
       form.reset();
-      setImagePreview(null);
     }
   };
 
   return (
-    <div className="flex items-center justify-center mt-20">
-      <div className="border p-6 w-[500px] rounded-md">
+    <div className=" flex items-center justify-center mt-20">
+      <div className=" border p-6 w-[500px] rounded-md">
         {!load ? (
           <Form {...form}>
             <form
@@ -111,34 +101,6 @@ export default function Blogsform() {
                 )}
               />
 
-              {/* Image Field */}
-              <Controller
-                name="image"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Image</FormLabel>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-                        field.onChange(file);
-                        setImagePreview(file ? URL.createObjectURL(file) : null);
-                      }}
-                    />
-                    {imagePreview && (
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className="mt-2 h-40 w-full object-cover"
-                      />
-                    )}
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               {/* Submit Button */}
               <Button type="submit" className="w-full">
                 Submit
@@ -146,13 +108,15 @@ export default function Blogsform() {
             </form>
           </Form>
         ) : (
-          <div className="flex flex-col space-y-3">
-            <Skeleton className="h-[125px] w-[250px] rounded-xl" />
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-[250px]" />
-              <Skeleton className="h-4 w-[200px]" />
+          <>
+            <div className="flex flex-col space-y-3">
+              <Skeleton className="h-[125px] w-[250px] rounded-xl" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-[250px]" />
+                <Skeleton className="h-4 w-[200px]" />
+              </div>
             </div>
-          </div>
+          </>
         )}
       </div>
     </div>
