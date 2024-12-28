@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
-import Post from "@/models/Post";
+import About from "@/models/About";
 
 // GET: Fetch all posts
 export async function GET() {
   try {
     await connectToDatabase();
-    const posts = await Post.find();
+    const posts = await About.find();
     return NextResponse.json(posts);
   } catch (error) {
     return NextResponse.json(
@@ -16,17 +16,22 @@ export async function GET() {
   }
 }
 
+
 // POST: Create a new post
 export async function POST(req: Request) {
   try {
-    const { title, content } = await req.json();
+    const { title, content, image } = await req.json(); // Include image
 
     await connectToDatabase();
-    const post = await Post.create({ title, content });
+    const post = await About.create({ title, content, image }); // Pass image
     return NextResponse.json(post, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json(
-      { error: "Failed to create post" },
+      {
+        error: "Failed to create post",
+        message: error.message, // Provide detailed error message
+        stack: error.stack, // Optional: Include stack trace for debugging
+      },
       { status: 500 }
     );
   }
@@ -37,7 +42,7 @@ export async function DELETE(req: Request) {
   try {
     const { id } = await req.json();
     await connectToDatabase();
-    const deletedPost = await Post.findByIdAndDelete(id);
+    const deletedPost = await About.findByIdAndDelete(id);
 
     if (!deletedPost) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
@@ -58,11 +63,11 @@ export async function DELETE(req: Request) {
 // PUT: Update a post by ID
 export async function PUT(req: Request) {
   try {
-    const { id, title, content } = await req.json();
+    const { id, title, content, image } = await req.json(); // Include image
     await connectToDatabase();
-    const updatedPost = await Post.findByIdAndUpdate(
+    const updatedPost = await About.findByIdAndUpdate(
       id,
-      { title, content },
+      { title, content, image }, // Pass image
       { new: true }
     );
 

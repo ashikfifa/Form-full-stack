@@ -1,6 +1,5 @@
-"use client";
-
-import { Button } from "@/components/ui/button";
+'use client'
+import React, { useState } from 'react';
 import {
   Form,
   FormControl,
@@ -9,31 +8,32 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { useForm, SubmitHandler, Controller } from "react-hook-form";
-import { CreateBlog } from "../api-common-client/create-blog";
-import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
-// Define form input types
 type Inputs = {
   title: string;
   content: string;
+  image: File | null; // Added the image field
 };
 
-export default function Blogsform() {
+const AboutForm = () => {
   const [load, setLoad] = useState(false);
 
   const formSchema = z.object({
     title: z.string().min(2, {
-      message: "Username must be at least 2 characters.",
+      message: "Title must be at least 2 characters.",
     }),
-
     content: z.string().min(2, {
-      message: "Username must be at least 2 characters.",
+      message: "Content must be at least 2 characters.",
     }),
+    image: z.any().refine((file) => file instanceof File || file === null, {
+      message: "Please provide a valid image file.",
+    }), // Image validation
   });
 
   const form = useForm<Inputs>({
@@ -41,13 +41,28 @@ export default function Blogsform() {
     defaultValues: {
       title: "",
       content: "",
+      image: null,
+
     },
   });
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     setLoad(true);
     try {
-      await CreateBlog(data?.title, data?.content);
+      const formData = new FormData();
+      formData.append("title", data.title);
+      formData.append("content", data.content);
+      if (data.image) {
+        formData.append("image", data.image); // Include the image in the form data
+      }
+
+      // Example: Replace CreateBlog with an API call that supports FormData
+      const result=await fetch('/api/image-store', {
+        method: 'POST',
+        body: formData,
+      });
+      console.log('1111111111111', result);
+      
     } catch (error: any) {
       console.log(error);
     } finally {
@@ -57,8 +72,8 @@ export default function Blogsform() {
   };
 
   return (
-    <div className=" flex items-center justify-center mt-20">
-      <div className=" border p-6 w-[500px] rounded-md">
+    <div className="flex items-center justify-center">
+      <div className="border p-6 w-[500px] rounded-md">
         {!load ? (
           <Form {...form}>
             <form
@@ -100,6 +115,28 @@ export default function Blogsform() {
                 )}
               />
 
+              {/* Image Upload Field */}
+              <FormField
+                control={form.control}
+                name="image"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Image</FormLabel>
+                    <FormControl>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) =>
+                          field.onChange(e.target.files ? e.target.files[0] : null)
+                        }
+                        className="block w-full border border-gray-300 rounded-md p-2"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               {/* Submit Button */}
               <Button type="submit" className="w-full">
                 Submit
@@ -107,17 +144,17 @@ export default function Blogsform() {
             </form>
           </Form>
         ) : (
-          <>
-            <div className="flex flex-col space-y-3">
-              <Skeleton className="h-[125px] w-[250px] rounded-xl" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-[250px]" />
-                <Skeleton className="h-4 w-[200px]" />
-              </div>
+          <div className="flex flex-col space-y-3">
+            <Skeleton className="h-[125px] w-[250px] rounded-xl" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-[250px]" />
+              <Skeleton className="h-4 w-[200px]" />
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>
   );
-}
+};
+
+export default AboutForm;
