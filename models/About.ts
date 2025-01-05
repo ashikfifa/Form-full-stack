@@ -3,14 +3,14 @@ import mongoose, { Schema, Document, model, models } from 'mongoose';
 interface IAbout extends Document {
   title: string;
   content: string;
-  About: string;
+  image: string;
 }
 
 const AboutSchema: Schema = new Schema(
   {
     title: { type: String, required: true },
     content: { type: String, required: true },
-    About: { type: String, required: false },
+    image: { type: String, required: true },
   },
   { timestamps: true }
 );

@@ -6,25 +6,25 @@ import About from "@/models/About";
 export async function GET() {
   try {
     await connectToDatabase();
-    const posts = await About.find();
-    return NextResponse.json(posts);
+    const about = await About.find();
+    return NextResponse.json(about);
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to fetch posts" },
+      { error: "Failed to fetch about" },
       { status: 500 }
     );
   }
 }
 
 
-// POST: Create a new post
+// POST: Create a new about
 export async function POST(req: Request) {
   try {
     const { title, content, image } = await req.json(); // Include image
 
     await connectToDatabase();
-    const post = await About.create({ title, content, image }); // Pass image
-    return NextResponse.json(post, { status: 201 });
+    const about = await About.create({ title, content, image }); // Pass image
+    return NextResponse.json(about, { status: 201 });
   } catch (error: any) {
     return NextResponse.json(
       {

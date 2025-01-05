@@ -1,5 +1,5 @@
-'use client'
-import React, { useState } from 'react';
+"use client";
+import React, { useState } from "react";
 import {
   Form,
   FormControl,
@@ -11,9 +11,10 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, SubmitHandler } from "react-hook-form";
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { useForm, SubmitHandler, Controller } from "react-hook-form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { CreateAbout } from "../api-common-client/create-blog";
 
 type Inputs = {
   title: string;
@@ -23,6 +24,7 @@ type Inputs = {
 
 const AboutForm = () => {
   const [load, setLoad] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const formSchema = z.object({
     title: z.string().min(2, {
@@ -42,33 +44,40 @@ const AboutForm = () => {
       title: "",
       content: "",
       image: null,
-
     },
   });
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     setLoad(true);
     try {
-      const formData = new FormData();
-      formData.append("title", data.title);
-      formData.append("content", data.content);
+      let base64Image = null;
       if (data.image) {
-        formData.append("image", data.image); // Include the image in the form data
+        base64Image = await convertToBase64(data.image);
       }
 
-      // Example: Replace CreateBlog with an API call that supports FormData
-      const result=await fetch('/api/image-store', {
-        method: 'POST',
-        body: formData,
-      });
-      console.log('1111111111111', result);
-      
+      const payload = {
+        title: data.title,
+        content: data.content,
+        image: base64Image,
+      };
+
+      await CreateAbout(payload);
     } catch (error: any) {
-      console.log(error);
+      console.error(error);
     } finally {
       setLoad(false);
       form.reset();
+      setImagePreview(null);
     }
+  };
+
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
   };
 
   return (
@@ -88,7 +97,7 @@ const AboutForm = () => {
                   <FormItem>
                     <FormLabel>Title</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter blog title" {...field} />
+                      <Input placeholder="Enter about title" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -104,7 +113,7 @@ const AboutForm = () => {
                     <FormLabel>Content</FormLabel>
                     <FormControl>
                       <textarea
-                        placeholder="Enter blog content"
+                        placeholder="Enter about content"
                         {...field}
                         rows={3}
                         className="block w-full rounded-md border border-gray-300 p-2"
@@ -115,23 +124,31 @@ const AboutForm = () => {
                 )}
               />
 
-              {/* Image Upload Field */}
-              <FormField
-                control={form.control}
+              {/* Image Field */}
+              <Controller
                 name="image"
+                control={form.control}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Image</FormLabel>
-                    <FormControl>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) =>
-                          field.onChange(e.target.files ? e.target.files[0] : null)
-                        }
-                        className="block w-full border border-gray-300 rounded-md p-2"
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        field.onChange(file);
+                        setImagePreview(
+                          file ? URL.createObjectURL(file) : null
+                        );
+                      }}
+                    />
+                    {imagePreview && (
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="mt-2 h-40 w-full object-cover"
                       />
-                    </FormControl>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
